@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistem Informasi Antrian Pasien — Klinik-24 Arief Rahman Hakim</title>
+  
+  <!-- Google Fonts: Plus Jakarta Sans & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  
+  <!-- Material Symbols Outlined -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              DEFAULT: '#00685F',
+              container: '#008378',
+              hover: '#00534C'
+            },
+            'on-primary': '#FFFFFF',
+            secondary: {
+              DEFAULT: '#0051D5',
+              container: '#316BF3',
+              hover: '#0042B0'
+            },
+            tertiary: {
+              DEFAULT: '#006947'
+            },
+            error: {
+              DEFAULT: '#BA1A1A',
+              container: '#FFDAD6'
+            },
+            surface: {
+              bg: '#F8F9FF',
+              low: '#EFF4FF',
+              container: '#E5EEFF',
+              high: '#DCE9FF',
+              card: '#FFFFFF'
+            },
+            content: {
+              main: '#0B1C30',
+              variant: '#3D4947',
+              outline: '#6D7A77',
+              outlineVariant: '#BCC9C6'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            heading: ['Plus Jakarta Sans', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- Custom CSS Tokens & Animation Stylesheet -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="bg-surface-bg text-content-main min-h-screen flex flex-col font-sans antialiased selection:bg-[#00685F] selection:text-white">
+
+  <!-- ===================================================================== -->
+  <!-- TOP BAR & ROLE SWITCHER -->
+  <!-- ===================================================================== -->
+  <header class="bg-white border-b border-content-outlineVariant/50 sticky top-0 z-40 card-shadow no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between py-2.5 gap-2">
+        
+        <!-- Brand Identity -->
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-md">
+              <span class="material-symbols-outlined text-2xl">local_hospital</span>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h1 class="font-heading font-extrabold text-base sm:text-lg text-content-main leading-none">
+                  Klinik-24
+                </h1>
+                <span class="bg-[#006947]/10 text-[#006947] text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                  24 Jam Layanan
+                </span>
+              </div>
+              <p class="text-xs text-content-outline">Jl. Arief Rahman Hakim No. 24, Bandar Lampung</p>
+            </div>
+          </div>
+
+          <!-- Mobile Audio & Clock Quick Toggle -->
+          <div class="flex items-center gap-1.5 md:hidden">
+            <button onclick="toggleAudioMute()" class="p-2 text-content-outline hover:text-primary rounded-lg bg-slate-50">
+              <span class="material-symbols-outlined text-xl">volume_up</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Center: Date & Time in Indonesian -->
+        <div class="hidden lg:flex items-center gap-3 text-xs bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200/60">
+          <div class="flex items-center gap-1.5 text-content-variant font-medium">
+            <span class="material-symbols-outlined text-base text-primary">calendar_today</span>
+            <span id="topbar-date">Selasa, 13 Oktober 2026</span>
+          </div>
+          <span class="text-slate-300">|</span>
+          <div class="flex items-center gap-1.5 text-primary font-bold">
+            <span class="material-symbols-outlined text-base">schedule</span>
+            <span id="topbar-clock">00:00:00 WIB</span>
+          </div>
+        </div>
+
+        <!-- Right: Audio Controls & Reset Demo -->
+        <div class="flex items-center justify-between md:justify-end gap-2">
+          <!-- Audio Toggle Button -->
+          <button id="header-audio-toggle" onclick="toggleAudioMute()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-primary/10 text-primary flex items-center gap-1.5 hover:bg-primary/20 transition">
+            <span class="material-symbols-outlined text-base">volume_up</span>
+            <span class="hidden sm:inline">Audio Nyala</span>
+          </button>
+
+          <!-- Test Audio Voice -->
+          <button onclick="testAudioTTS()" title="Uji Suara Pemanggilan TTS" class="p-1.5 text-content-outline hover:text-secondary rounded-lg hover:bg-slate-100 transition">
+            <span class="material-symbols-outlined text-xl">record_voice_over</span>
+          </button>
+
+          <!-- Reset Mock Data Button -->
+          <button onclick="if(confirm('Reset semua data antrian ke contoh awal?')){ state.resetToDefault(); renderAllViews(); showToast('Data berhasil di-reset ke kondisi awal.', 'info'); }" title="Reset Data Simulasi" class="px-2.5 py-1.5 text-xs text-content-outline hover:text-primary rounded-lg hover:bg-slate-100 border border-slate-200 flex items-center gap-1 transition">
+            <span class="material-symbols-outlined text-base">restart_alt</span>
+            <span class="hidden sm:inline">Reset Demo</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- ROLE NAVIGATION SWITCHER -->
+      <div class="pt-1 pb-2.5 border-t border-slate-100 flex items-center justify-between overflow-x-auto gap-2 scrollbar-none">
+        <div class="flex items-center gap-1.5 bg-surface-low p-1 rounded-xl border border-slate-200/80">
+          
+          <button data-role="pasien" class="role-nav-btn px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition duration-200">
+            <span class="material-symbols-outlined text-lg">person</span>
+            Pasien (Mobile/Web)
+          </button>
+
+          <button data-role="asisten" class="role-nav-btn px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition duration-200">
+            <span class="material-symbols-outlined text-lg">support_agent</span>
+            Asisten Dokter
+          </button>
+
+          <button data-role="dokter" class="role-nav-btn px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition duration-200">
+            <span class="material-symbols-outlined text-lg">stethoscope</span>
+            Dokter & Rekam Medis
+          </button>
+
+          <button data-role="display" class="role-nav-btn px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition duration-200">
+            <span class="material-symbols-outlined text-lg">tv</span>
+            Display Board TV
+          </button>
+
+        </div>
+
+        <div id="tv-fullscreen-hint" class="hidden text-xs text-secondary font-semibold items-center gap-1">
+          <span class="material-symbols-outlined text-base">fullscreen</span>
+          Layar Monitor Ruang Tunggu
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===================================================================== -->
+  <!-- MAIN CONTENT CONTAINER -->
+  <!-- ===================================================================== -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+
+    <!-- =================================================================== -->
+    <!-- VIEW 1: ROLE PASIEN (PENDAFTARAN & TIKET LIVE) -->
+    <!-- =================================================================== -->
+    <div id="view-pasien" class="role-view space-y-6">
+      
+      <!-- Pasien Calling Alert Banner (Tampil saat giliran pasien dipanggil) -->
+      <div id="patient-called-alert" class="hidden p-5 bg-gradient-to-r from-secondary to-secondary-container text-white rounded-2xl shadow-xl animate-call-pulse">
+        <div class="flex items-center gap-4">
+          <div class="w-14 h-14 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center">
+            <span class="material-symbols-outlined text-3xl">campaign</span>
+          </div>
+          <div>
+            <h3 class="text-xl font-heading font-extrabold">GILIRAN ANDA SEDANG DIPANGGIL!</h3>
+            <p class="text-sm opacity-95">Silakan segera menuju ruang periksa yang tertera pada tiket Anda. Petugas sedang menunggu kehadiran Anda.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Formulir Pendaftaran Antrian Baru (Kiri) -->
+        <div class="lg:col-span-5 space-y-6">
+          <div class="bg-white p-6 rounded-2xl border border-content-outlineVariant/60 card-shadow">
+            <div class="flex items-center gap-2.5 mb-1">
+              <span class="material-symbols-outlined text-primary text-2xl">how_to_reg</span>
+              <h2 class="text-lg font-heading font-bold text-content-main">Ambil Antrian Baru</h2>
+            </div>
+            <p class="text-xs text-content-variant mb-5">Daftar mandiri tanpa antre fisik di loket. Nomor antrian terbit otomatis secara instan.</p>
+
+            <form id="patient-register-form" class="space-y-4">
+              <div>
+                <label class="block text-xs font-semibold text-content-main mb-1.5" for="reg-patient-name">
+                  Nama Lengkap Pasien <span class="text-error">*</span>
+                </label>
+                <div class="relative">
+                  <span class="material-symbols-outlined absolute left-3 top-2.5 text-content-outline text-lg">badge</span>
+                  <input type="text" id="reg-patient-name" placeholder="Contoh: Budi Santoso" required
+                    class="w-full pl-9 pr-3 py-2 text-sm bg-surface-low border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:bg-white transition" />
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-content-main mb-1.5" for="reg-patient-phone">
+                  Nomor WhatsApp / HP
+                </label>
+                <div class="relative">
+                  <span class="material-symbols-outlined absolute left-3 top-2.5 text-content-outline text-lg">phone_android</span>
+                  <input type="tel" id="reg-patient-phone" placeholder="Contoh: 0812-3456-7890"
+                    class="w-full pl-9 pr-3 py-2 text-sm bg-surface-low border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:bg-white transition" />
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-content-main mb-1.5" for="reg-patient-nik">
+                  NIK / No. Rekam Medis (Opsional)
+                </label>
+                <div class="relative">
+                  <span class="material-symbols-outlined absolute left-3 top-2.5 text-content-outline text-lg">credit_card</span>
+                  <input type="text" id="reg-patient-nik" placeholder="16 Digit NIK KTP Pasien"
+                    class="w-full pl-9 pr-3 py-2 text-sm bg-surface-low border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:bg-white transition" />
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-content-main mb-1.5" for="patient-poli-select">
+                  Pilih Poliklinik & Dokter Tujuan <span class="text-error">*</span>
+                </label>
+                <div class="relative">
+                  <select id="patient-poli-select" required
+                    class="w-full py-2.5 px-3 text-xs bg-surface-low border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:bg-white font-medium">
+                  </select>
+                </div>
+              </div>
+
+              <button type="submit" class="w-full py-3 bg-primary hover:bg-primary-hover text-white rounded-xl font-heading font-bold text-sm shadow-md hover:shadow-lg transition flex items-center justify-center gap-2 mt-4">
+                <span class="material-symbols-outlined text-xl">confirmation_number</span>
+                Daftar & Terbitkan Nomor Antrian
+              </button>
+            </form>
+          </div>
+
+          <!-- Info Kartu Klinik-24 -->
+          <div class="p-4 bg-surface-low border border-slate-200 rounded-xl text-xs text-content-variant space-y-2">
+            <div class="flex items-center gap-2 text-primary font-bold">
+              <span class="material-symbols-outlined text-lg">info</span>
+              Petunjuk Pendaftaran Pasien
+            </div>
+            <p>1. Nomor antrian berlaku pada tanggal diterbitkan.</p>
+            <p>2. Harap hadir di klinik minimal 10 menit sebelum estimasi giliran Anda.</p>
+            <p>3. Panggilan suara akan diumumkan melalui speaker di ruang tunggu dan pada dashboard ini.</p>
+          </div>
+        </div>
+
+        <!-- Tiket Aktif & Live Status Pasien (Kanan) -->
+        <div class="lg:col-span-7 space-y-6">
+          
+          <!-- Tampilan Kartu Tiket Digital -->
+          <div id="patient-active-ticket-container" class="bg-white rounded-2xl border-2 border-primary/40 overflow-hidden card-shadow-lg">
+            
+            <div class="bg-gradient-to-r from-primary to-primary-container p-6 text-white relative">
+              <div class="flex justify-between items-start">
+                <div>
+                  <span class="text-xs uppercase font-medium tracking-wider text-emerald-100">Tiket Pendaftaran Digital</span>
+                  <h3 class="text-lg font-heading font-extrabold" id="my-ticket-poli">Poli Umum</h3>
+                  <p class="text-xs text-emerald-100" id="my-ticket-doctor">dr. Andi Wijaya</p>
+                </div>
+                <div class="text-right">
+                  <span id="my-ticket-status-badge" class="px-3 py-1 text-xs font-bold rounded-full bg-white text-primary">
+                    Menunggu
+                  </span>
+                  <p class="text-[11px] text-emerald-100 mt-1" id="my-ticket-regtime">Daftar 08:50</p>
+                </div>
+              </div>
+
+              <!-- Nomor Antrian Raksasa -->
+              <div class="mt-6 mb-2 text-center py-4 bg-white/10 rounded-xl backdrop-blur-sm border border-white/20">
+                <span class="text-xs text-emerald-100 block uppercase font-medium tracking-widest">Nomor Antrian Anda</span>
+                <span id="my-ticket-number" class="text-6xl sm:text-7xl font-heading font-extrabold tracking-tight text-white block mt-1">
+                  A-003
+                </span>
+                <span id="my-ticket-name" class="text-sm font-semibold text-emerald-50 mt-1 block">
+                  Bapak Ahmad Fauzi
+                </span>
+              </div>
+            </div>
+
+            <!-- Live Status Tracker -->
+            <div class="p-6 bg-white space-y-6">
+              <div>
+                <h4 class="text-xs font-bold uppercase tracking-wider text-content-outline mb-3">Live Status Ruang Tunggu</h4>
+                <div class="grid grid-cols-3 gap-3">
+                  
+                  <div class="p-3.5 bg-surface-low rounded-xl border border-slate-200 text-center">
+                    <span class="text-[11px] text-content-outline block">Sedang Dipanggil</span>
+                    <span id="tracker-current-called" class="text-xl sm:text-2xl font-black font-heading text-secondary block mt-0.5">
+                      A-001
+                    </span>
+                  </div>
+
+                  <div class="p-3.5 bg-surface-low rounded-xl border border-slate-200 text-center">
+                    <span class="text-[11px] text-content-outline block">Sisa di Depan Anda</span>
+                    <span id="tracker-waiting-count" class="text-xl sm:text-2xl font-black font-heading text-primary block mt-0.5">
+                      1 Orang
+                    </span>
+                  </div>
+
+                  <div class="p-3.5 bg-surface-low rounded-xl border border-slate-200 text-center">
+                    <span class="text-[11px] text-content-outline block">Estimasi Tunggu</span>
+                    <span id="tracker-est-time" class="text-xl sm:text-2xl font-black font-heading text-content-main block mt-0.5">
+                      ~15 Menit
+                    </span>
+                  </div>
+
+                </div>
+              </div>
+
+              <!-- Lokasi Ruang Periksa -->
+              <div class="flex items-center justify-between p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs">
+                <div class="flex items-center gap-2">
+                  <span class="material-symbols-outlined text-primary text-xl">room</span>
+                  <div>
+                    <span class="text-content-outline block">Lokasi Pemeriksaan:</span>
+                    <strong class="text-content-main text-sm" id="my-ticket-room">Ruang Periksa 1 (Lantai 1)</strong>
+                  </div>
+                </div>
+                <button onclick="confirmCancelMyTicket()" class="px-3 py-1.5 text-xs font-semibold text-error hover:bg-error-container/50 rounded-lg transition flex items-center gap-1">
+                  <span class="material-symbols-outlined text-base">cancel</span>
+                  Batalkan Antrian
+                </button>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Placeholder jika belum ada tiket aktif -->
+          <div id="patient-no-ticket-placeholder" class="hidden bg-white p-12 rounded-2xl border border-content-outlineVariant/60 text-center card-shadow">
+            <div class="w-16 h-16 bg-surface-low rounded-2xl flex items-center justify-center mx-auto mb-4 text-content-outline">
+              <span class="material-symbols-outlined text-3xl">confirmation_number</span>
+            </div>
+            <h3 class="text-base font-heading font-bold text-content-main mb-1">Belum Ada Antrian Aktif</h3>
+            <p class="text-xs text-content-variant max-w-sm mx-auto mb-6">
+              Silakan isi formulir pendaftaran di sebelah kiri untuk mengambil nomor antrian Anda di Klinik-24.
+            </p>
+          </div>
+
+          <!-- Riwayat Resep Medis Pasien -->
+          <div class="bg-white p-6 rounded-2xl border border-content-outlineVariant/60 card-shadow">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary text-2xl">receipt_long</span>
+                <h3 class="text-base font-heading font-bold text-content-main">Riwayat Kunjungan & Resep Dokter</h3>
+              </div>
+              <span class="text-xs text-content-outline">Terdokumentasi Digital</span>
+            </div>
+            
+            <div id="patient-history-list" class="space-y-3">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- VIEW 2: ROLE ASISTEN DOKTER (DASHBOARD & TTS QUEUE CALLER) -->
+    <!-- =================================================================== -->
+    <div id="view-asisten" class="role-view space-y-6 hidden">
+      
+      <!-- Kartu Ringkasan Statistik -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+        
+        <div class="p-4 bg-white rounded-xl border border-content-outlineVariant/60 card-shadow">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs text-content-outline font-medium">Total Tiket</span>
+            <span class="material-symbols-outlined text-primary text-lg">group</span>
+          </div>
+          <span id="stat-total-queue" class="text-2xl font-black font-heading text-content-main">0</span>
+          <span class="text-[11px] text-slate-400 block mt-0.5">Pasien hari ini</span>
+        </div>
+
+        <div class="p-4 bg-white rounded-xl border border-amber-200 bg-amber-50/20 card-shadow">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs text-amber-800 font-medium">Menunggu</span>
+            <span class="material-symbols-outlined text-amber-600 text-lg">hourglass_top</span>
+          </div>
+          <span id="stat-waiting-queue" class="text-2xl font-black font-heading text-amber-700">0</span>
+          <span class="text-[11px] text-slate-400 block mt-0.5">Dalam antrian</span>
+        </div>
+
+        <div class="p-4 bg-white rounded-xl border border-secondary/30 bg-secondary/5 card-shadow">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs text-secondary font-medium">Sedang Dipanggil</span>
+            <span class="material-symbols-outlined text-secondary text-lg">campaign</span>
+          </div>
+          <span id="stat-calling-queue" class="text-2xl font-black font-heading text-secondary">0</span>
+          <span class="text-[11px] text-slate-400 block mt-0.5">Panggilan aktif</span>
+        </div>
+
+        <div class="p-4 bg-white rounded-xl border border-primary/30 bg-primary/5 card-shadow">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs text-primary font-medium">Sedang Diperiksa</span>
+            <span class="material-symbols-outlined text-primary text-lg">stethoscope</span>
+          </div>
+          <span id="stat-serving-queue" class="text-2xl font-black font-heading text-primary">0</span>
+          <span class="text-[11px] text-slate-400 block mt-0.5">Di ruang dokter</span>
+        </div>
+
+        <div class="p-4 bg-white rounded-xl border border-emerald-200 bg-emerald-50/20 card-shadow col-span-2 sm:col-span-1">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs text-[#006947] font-medium">Selesai</span>
+            <span class="material-symbols-outlined text-[#006947] text-lg">check_circle</span>
+          </div>
+          <span id="stat-completed-queue" class="text-2xl font-black font-heading text-[#006947]">0</span>
+          <span class="text-[11px] text-slate-400 block mt-0.5">Telah dilayani</span>
+        </div>
+
+      </div>
+
+      <!-- Spotlight Panggilan Aktif (Banner Pemanggilan & Validasi) -->
+      <div id="assistant-active-call-box">
+        <!-- Rendered via JS -->
+      </div>
+
+      <!-- Tabel Antrian & Filter Bar -->
+      <div class="bg-white rounded-2xl border border-content-outlineVariant/60 overflow-hidden card-shadow">
+        
+        <!-- Filter Header -->
+        <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div>
+            <h3 class="font-heading font-bold text-base text-content-main">Daftar Antrian Pasien Real-Time</h3>
+            <p class="text-xs text-content-variant">Kendali pemanggilan suara (TTS) dan validasi kehadiran pasien klinik</p>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2.5">
+            <!-- Filter Poli -->
+            <div class="relative">
+              <select id="assistant-filter-poli" class="text-xs font-medium bg-surface-low border border-slate-200 rounded-lg px-3 py-2 text-content-main outline-none focus:border-primary">
+                <option value="ALL">Semua Poliklinik</option>
+                <option value="POLI_UMUM">Poli Umum</option>
+                <option value="POLI_GIGI">Poli Gigi & Mulut</option>
+                <option value="POLI_ANAK">Poli Anak</option>
+              </select>
+            </div>
+
+            <!-- Search Input -->
+            <div class="relative">
+              <span class="material-symbols-outlined absolute left-2.5 top-2 text-slate-400 text-lg">search</span>
+              <input type="text" id="assistant-search-input" placeholder="Cari nama / nomor..." class="pl-8 pr-3 py-1.5 text-xs bg-surface-low border border-slate-200 rounded-lg outline-none focus:border-primary w-40 sm:w-52" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabel Antrian -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-surface-low/80 text-[11px] font-bold uppercase tracking-wider text-content-outline border-b border-slate-200">
+                <th class="py-3 px-4">No. Antrian</th>
+                <th class="py-3 px-4">Identitas Pasien</th>
+                <th class="py-3 px-4">Poliklinik Tujuan</th>
+                <th class="py-3 px-4">Waktu Daftar</th>
+                <th class="py-3 px-4">Status</th>
+                <th class="py-3 px-4 text-right">Tindakan Cepat</th>
+              </tr>
+            </thead>
+            <tbody id="assistant-queue-tbody" class="divide-y divide-slate-100 text-xs">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- VIEW 3: ROLE DOKTER (PEMERIKSAAN MEDIS & RESEP DIGITAL EMR) -->
+    <!-- =================================================================== -->
+    <div id="view-dokter" class="role-view space-y-6 hidden">
+      
+      <!-- Doctor Header & Profile Bar -->
+      <div class="bg-white p-5 rounded-2xl border border-content-outlineVariant/60 flex flex-col md:flex-row md:items-center justify-between gap-4 card-shadow">
+        <div class="flex items-center gap-3.5">
+          <div class="w-12 h-12 rounded-xl bg-primary text-white flex items-center justify-center shadow-md">
+            <span class="material-symbols-outlined text-2xl">medical_services</span>
+          </div>
+          <div>
+            <h2 id="doctor-profile-name" class="font-heading font-extrabold text-lg text-content-main">dr. Andi Wijaya</h2>
+            <div class="flex flex-wrap items-center gap-2 text-xs text-content-outline mt-0.5">
+              <span id="doctor-profile-sip">SIP. 446/092/Dinkes.BL/2023</span>
+              <span>•</span>
+              <span id="doctor-profile-poli" class="font-semibold text-primary">Poli Umum</span>
+              <span>•</span>
+              <span id="doctor-profile-room" class="text-slate-500">Ruang Periksa 1</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ganti Dokter Aktif Switcher -->
+        <div class="flex items-center gap-2">
+          <label class="text-xs font-semibold text-content-outline whitespace-nowrap">Bertugas Sebagai:</label>
+          <select id="doctor-poli-switcher" class="text-xs font-semibold bg-surface-low border border-slate-200 rounded-lg px-3 py-2 text-content-main focus:border-primary outline-none">
+            <option value="POLI_UMUM">dr. Andi Wijaya (Poli Umum)</option>
+            <option value="POLI_GIGI">drg. Siti Nurhaliza (Poli Gigi)</option>
+            <option value="POLI_ANAK">dr. Budi Santoso, Sp.A (Poli Anak)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Panel Antrian Menunggu Dokter (Kiri) -->
+        <div class="lg:col-span-4 space-y-6">
+          <div class="bg-white p-5 rounded-2xl border border-content-outlineVariant/60 card-shadow">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-heading font-bold text-sm text-content-main flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-amber-600 text-lg">pending_actions</span>
+                Antrian Menunggu
+              </h3>
+              <span class="text-xs bg-amber-50 text-amber-700 px-2.5 py-0.5 rounded-full font-bold">Poli Ini</span>
+            </div>
+
+            <ul id="doctor-waiting-list" class="space-y-2.5">
+              <!-- Rendered via JS -->
+            </ul>
+          </div>
+
+          <div class="bg-white p-5 rounded-2xl border border-content-outlineVariant/60 card-shadow">
+            <h3 class="font-heading font-bold text-sm text-content-main flex items-center gap-1.5 mb-3">
+              <span class="material-symbols-outlined text-[#006947] text-lg">task_alt</span>
+              Pasien Selesai Hari Ini
+            </h3>
+
+            <ul id="doctor-completed-list" class="space-y-2.5">
+              <!-- Rendered via JS -->
+            </ul>
+          </div>
+        </div>
+
+        <!-- Panel Form Rekam Medis & EMR Pasien Aktif (Kanan) -->
+        <div class="lg:col-span-8">
+          
+          <!-- Formulir EMR -->
+          <div id="doctor-emr-form-container" class="bg-white p-6 rounded-2xl border-2 border-primary/40 card-shadow-lg hidden">
+            
+            <div class="flex flex-wrap items-center justify-between pb-4 mb-5 border-b border-slate-100 gap-2">
+              <div class="flex items-center gap-3">
+                <span class="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-heading font-black text-xl">
+                  <span id="emr-patient-number">A-002</span>
+                </span>
+                <div>
+                  <h3 id="emr-patient-name" class="font-heading font-bold text-lg text-content-main">Ibu Melati Kusuma</h3>
+                  <p class="text-xs text-content-outline">
+                    NIK: <span id="emr-patient-nik">1871036705910002</span> • Telp: <span id="emr-patient-phone">0853-9081-2244</span>
+                  </p>
+                </div>
+              </div>
+
+              <div class="text-right">
+                <span class="px-3 py-1 rounded-full text-xs font-bold bg-primary text-white inline-block">
+                  Sedang Diperiksa
+                </span>
+                <p id="emr-patient-time" class="text-[11px] text-content-outline mt-1">Masuk: 09:05</p>
+              </div>
+            </div>
+
+            <form id="doctor-emr-form" class="space-y-5">
+              
+              <!-- 1. Keluhan & Gejala -->
+              <div>
+                <label class="block text-xs font-bold text-content-main mb-1.5 flex items-center gap-1" for="emr-symptoms">
+                  <span class="material-symbols-outlined text-sm text-primary">clinical_notes</span>
+                  Anamnesis / Keluhan & Gejala Pasien <span class="text-error">*</span>
+                </label>
+                <textarea id="emr-symptoms" rows="2" placeholder="Catat keluhan utama, durasi, dan tanda-tanda vital pasien..." required
+                  class="w-full text-xs p-3 bg-surface-low border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:bg-white"></textarea>
+              </div>
+
+              <!-- 2. Diagnosa Medis -->
+              <div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <label class="block text-xs font-bold text-content-main flex items-center gap-1" for="emr-diagnosis">
+                    <span class="material-symbols-outlined text-sm text-primary">diagnosis</span>
+                    Diagnosa Medis / Temuan Klinis <span class="text-error">*</span>
+                  </label>
+                  <span class="text-[11px] text-slate-400">Pilih cepat:</span>
+                </div>
+
+                <div class="flex flex-wrap gap-1.5 mb-2">
+                  <button type="button" data-val="Faringitis Akut & Febris" class="diagnosis-preset-chip px-2.5 py-1 rounded-full bg-slate-100 hover:bg-primary hover:text-white text-[11px] text-content-variant transition">Faringitis</button>
+                  <button type="button" data-val="Dispepsia Fungsional / Gastritis" class="diagnosis-preset-chip px-2.5 py-1 rounded-full bg-slate-100 hover:bg-primary hover:text-white text-[11px] text-content-variant transition">Gastritis</button>
+                  <button type="button" data-val="ISPA (Infeksi Saluran Pernafasan Atas)" class="diagnosis-preset-chip px-2.5 py-1 rounded-full bg-slate-100 hover:bg-primary hover:text-white text-[11px] text-content-variant transition">ISPA</button>
+                  <button type="button" data-val="Pulpitis Reversibel Gigi" class="diagnosis-preset-chip px-2.5 py-1 rounded-full bg-slate-100 hover:bg-primary hover:text-white text-[11px] text-content-variant transition">Pulpitis</button>
+                  <button type="button" data-val="Hipertensi Grade 1" class="diagnosis-preset-chip px-2.5 py-1 rounded-full bg-slate-100 hover:bg-primary hover:text-white text-[11px] text-content-variant transition">Hipertensi</button>
+                </div>
+
+                <input type="text" id="emr-diagnosis" placeholder="Tuliskan diagnosa medis..." required
+                  class="w-full text-xs p-2.5 bg-surface-low border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:bg-white font-medium" />
+              </div>
+
+              <!-- 3. Resep Obat Digital Dinamis -->
+              <div class="p-4 bg-surface-low rounded-xl border border-slate-200 space-y-3">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-1.5 text-xs font-bold text-content-main">
+                    <span class="material-symbols-outlined text-base text-primary">prescriptions</span>
+                    Resep Obat Digital (R/)
+                  </div>
+                  <button type="button" id="btn-add-rx-item" class="px-2.5 py-1 bg-white hover:bg-primary hover:text-white border border-slate-200 rounded-lg text-xs font-semibold flex items-center gap-1 text-primary transition shadow-sm">
+                    <span class="material-symbols-outlined text-sm">add</span>
+                    Tambah Obat
+                  </button>
+                </div>
+
+                <!-- Container daftar baris obat -->
+                <div id="doctor-prescription-items" class="space-y-2">
+                  <!-- Baris ditambahkan dinamis via JS -->
+                </div>
+              </div>
+
+              <!-- 4. Catatan & Edukasi Pasien -->
+              <div>
+                <label class="block text-xs font-bold text-content-main mb-1.5 flex items-center gap-1" for="emr-notes">
+                  <span class="material-symbols-outlined text-sm text-primary">notes</span>
+                  Instruksi & Edukasi Perawatan untuk Pasien
+                </label>
+                <input type="text" id="emr-notes" placeholder="Contoh: Istirahat cukup, hindari makanan pedas dan berminyak..."
+                  class="w-full text-xs p-2.5 bg-surface-low border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:bg-white" />
+              </div>
+
+              <!-- Submit Button -->
+              <div class="pt-3 flex items-center justify-end gap-3">
+                <button type="submit" class="w-full sm:w-auto px-6 py-3 bg-primary hover:bg-primary-hover text-white rounded-xl font-heading font-bold text-sm shadow-md hover:shadow-lg transition flex items-center justify-center gap-2">
+                  <span class="material-symbols-outlined text-lg">check_circle</span>
+                  Selesaikan Pemeriksaan & Simpan EMR
+                </button>
+              </div>
+
+            </form>
+
+          </div>
+
+          <!-- Placeholder saat tidak ada pasien sedang diperiksa -->
+          <div id="doctor-no-patient-placeholder" class="bg-white p-12 rounded-2xl border border-content-outlineVariant/60 text-center card-shadow">
+            <div class="w-16 h-16 bg-surface-low rounded-2xl flex items-center justify-center mx-auto mb-4 text-content-outline">
+              <span class="material-symbols-outlined text-3xl">patient_list</span>
+            </div>
+            <h3 class="text-base font-heading font-bold text-content-main mb-1">Tidak Ada Pasien di Ruang Pemeriksaan</h3>
+            <p class="text-xs text-content-variant max-w-sm mx-auto mb-6">
+              Asisten dokter belum memvalidasi pasien untuk masuk ke poli ini. Pasien akan muncul otomatis saat statusnya divalidasi "Hadir".
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- VIEW 4: ROLE DISPLAY BOARD TV (MONITOR RUANG TUNGGU PUBLIK) -->
+    <!-- =================================================================== -->
+    <div id="view-display" class="role-view space-y-6 hidden">
+      
+      <!-- TV Container Card -->
+      <div class="bg-white rounded-3xl border-2 border-slate-200 overflow-hidden card-shadow-lg">
+        
+        <!-- TV Top Bar -->
+        <div class="bg-slate-900 text-white px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white">
+              <span class="material-symbols-outlined text-2xl">local_hospital</span>
+            </div>
+            <div>
+              <h2 class="font-heading font-black text-lg tracking-wide">KLINIK-24 ARIEF RAHMAN HAKIM</h2>
+              <p class="text-xs text-emerald-400 font-medium">Sistem Informasi Panggilan Antrian Digital</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-4 text-sm font-heading font-bold">
+            <div class="flex items-center gap-2 px-3 py-1 bg-white/10 rounded-lg">
+              <span class="material-symbols-outlined text-emerald-400 text-base">schedule</span>
+              <span id="tv-clock">18:15:00 WIB</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- TV Main Content Grid -->
+        <div class="p-6 sm:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 bg-surface-bg">
+          
+          <!-- Box Panggilan Aktif (Kiri - 7 Kolom) -->
+          <div class="lg:col-span-7 flex flex-col justify-between">
+            <div id="tv-calling-box" class="bg-white p-8 rounded-3xl border-2 border-secondary shadow-xl relative overflow-hidden flex-1 flex flex-col justify-center items-center text-center">
+              
+              <div class="flex items-center gap-2 mb-3">
+                <span class="sound-bar text-secondary h-4"></span>
+                <span class="sound-bar text-secondary h-6"></span>
+                <span class="sound-bar text-secondary h-5"></span>
+                <span class="sound-bar text-secondary h-4"></span>
+                <span class="text-xs font-black uppercase tracking-widest text-secondary font-heading ml-1">
+                  SEDANG DIPANGGIL
+                </span>
+              </div>
+
+              <!-- Nomor Antrian Raksasa Display TV -->
+              <div id="tv-called-number" class="text-7xl sm:text-8xl md:text-9xl font-black font-heading tracking-tight text-slate-900 my-2">
+                A-001
+              </div>
+
+              <div class="mt-2 space-y-1">
+                <h3 id="tv-called-name" class="text-2xl sm:text-3xl font-extrabold text-content-main font-heading">
+                  Bapak Hendra Gunawan
+                </h3>
+                <p id="tv-called-poli" class="text-base sm:text-lg font-bold text-primary">
+                  Poli Umum — dr. Andi Wijaya
+                </p>
+                <div class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-secondary/10 text-secondary text-sm font-bold mt-2">
+                  <span class="material-symbols-outlined text-base">meeting_room</span>
+                  <span id="tv-called-room">Ruang Periksa 1 (Lantai 1)</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Box Antrian Berikutnya & Status Poli (Kanan - 5 Kolom) -->
+          <div class="lg:col-span-5 space-y-6">
+            
+            <!-- Antrian Selanjutnya -->
+            <div class="bg-white p-5 rounded-2xl border border-content-outlineVariant/60 card-shadow">
+              <div class="flex items-center justify-between mb-3">
+                <h4 class="font-heading font-bold text-sm text-content-main flex items-center gap-2">
+                  <span class="material-symbols-outlined text-primary text-xl">next_plan</span>
+                  Antrian Berikutnya
+                </h4>
+                <span class="text-xs text-content-outline font-medium">Mohon Bersiap</span>
+              </div>
+
+              <div id="tv-next-queue-list" class="space-y-2.5">
+                <!-- Rendered via JS -->
+              </div>
+            </div>
+
+            <!-- Status Antrian Per Poliklinik -->
+            <div class="space-y-2">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-content-outline">Status Poliklinik</h4>
+              <div id="tv-poly-summary-grid" class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <!-- Rendered via JS -->
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- TV Running Text Marquee -->
+        <div class="bg-slate-900 text-white py-3 border-t border-slate-800 marquee-container text-xs sm:text-sm font-medium">
+          <div class="marquee-content flex items-center gap-8">
+            <span>✨ Selamat Datang di Klinik-24 Arief Rahman Hakim Bandar Lampung — Layanan Kesehatan 24 Jam Terpercaya</span>
+            <span>•</span>
+            <span>📢 Mohon tertib di ruang tunggu dan dengarkan panggilan pengeras suara</span>
+            <span>•</span>
+            <span>🏥 Buka 3 Poliklinik: Poli Umum, Poli Gigi & Mulut, serta Poli Anak (Pediatri)</span>
+            <span>•</span>
+            <span>💊 Seluruh resep obat dan rekam medis terintegrasi digital untuk kenyamanan pasien</span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL: CETAK RESEP RESMI DOKTER & LEMBAR EMR -->
+  <!-- ===================================================================== -->
+  <div id="prescription-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto border border-slate-200">
+      
+      <!-- Top Modal Toolbar (No-Print) -->
+      <div class="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between no-print">
+        <div class="flex items-center gap-2 text-primary font-bold text-sm">
+          <span class="material-symbols-outlined text-lg">description</span>
+          Salinan Resep & Rekam Medis
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="triggerPrintPrescription()" class="px-3.5 py-1.5 bg-primary hover:bg-primary-hover text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm transition">
+            <span class="material-symbols-outlined text-base">print</span>
+            Cetak Resep
+          </button>
+          <button onclick="closePrescriptionModal()" class="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg">
+            <span class="material-symbols-outlined text-xl">close</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Printable Area -->
+      <div id="print-area" class="p-6 sm:p-8 bg-white font-sans text-slate-900 space-y-6">
+        
+        <!-- Kop Klinik Resmi -->
+        <div class="text-center pb-4 border-b-2 border-slate-800">
+          <h2 class="font-heading font-extrabold text-xl tracking-wide uppercase text-slate-900">
+            KLINIK-24 ARIEF RAHMAN HAKIM
+          </h2>
+          <p class="text-xs text-slate-600">Jl. Arief Rahman Hakim No. 24, Bandar Lampung • Telp: (0721) 789-2424</p>
+          <p class="text-[11px] text-slate-500 font-medium">Izin Operasional Dinkes No: 445/024/KLINIK/2022</p>
+        </div>
+
+        <!-- Data Dokter & Tanggal -->
+        <div class="flex justify-between items-start text-xs border-b border-dashed border-slate-300 pb-3">
+          <div>
+            <p><strong class="text-slate-900">Dokter Pemeriksa:</strong> <span id="print-doc-name">dr. Andi Wijaya</span></p>
+            <p class="text-slate-600" id="print-doc-sip">SIP. 446/092/Dinkes.BL/2023</p>
+            <p class="text-slate-600"><span id="print-poli-name">Poli Umum</span> (<span id="print-clinic-room">Ruang Periksa 1</span>)</p>
+          </div>
+          <div class="text-right">
+            <p><strong class="text-slate-900">Tanggal:</strong> <span id="print-date">13 Oktober 2026</span></p>
+            <p class="text-slate-600">No. Antrian: <strong class="text-slate-900" id="print-ticket-number">A-001</strong></p>
+          </div>
+        </div>
+
+        <!-- Identitas Pasien & Diagnosa -->
+        <div class="bg-slate-50 p-3.5 rounded-lg border border-slate-200 text-xs space-y-1.5">
+          <div class="flex justify-between">
+            <span><strong>Nama Pasien:</strong> <span id="print-patient-name">Bapak Hendra Gunawan</span></span>
+            <span><strong>NIK:</strong> <span id="print-patient-nik">-</span></span>
+          </div>
+          <div>
+            <strong>Gejala/Keluhan:</strong> <span id="print-symptoms">-</span>
+          </div>
+          <div>
+            <strong>Diagnosa Klinis:</strong> <span id="print-diagnosis" class="font-bold text-slate-900">-</span>
+          </div>
+        </div>
+
+        <!-- Bagian Resep Obat (R/) -->
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 border-b border-slate-200 pb-1">
+            Resep Obat Dokter (R/)
+          </h4>
+          <div id="print-rx-items" class="space-y-3">
+            <!-- Dynamic items rendered via JS -->
+          </div>
+        </div>
+
+        <!-- Catatan & Tanda Tangan Dokter -->
+        <div class="pt-4 flex justify-between items-end text-xs">
+          <div class="max-w-xs">
+            <p class="text-[11px] text-slate-500"><strong>Catatan Khusus:</strong></p>
+            <p id="print-notes" class="text-xs text-slate-700 italic">-</p>
+          </div>
+          <div class="text-center w-40">
+            <p class="text-slate-600 text-[11px]">Bandar Lampung, Paraf Dokter</p>
+            <div class="h-16 flex items-center justify-center italic text-slate-300 font-serif text-lg">
+              (ttd digital)
+            </div>
+            <p class="font-bold text-slate-900 border-t border-slate-400 pt-1 text-xs" id="print-signature-name">dr. Andi Wijaya</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Bottom Close Button (No-Print) -->
+      <div class="p-4 bg-slate-50 border-t border-slate-200 flex justify-end no-print">
+        <button onclick="closePrescriptionModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg text-xs font-semibold">
+          Tutup
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <!-- ===================================================================== -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm pointer-events-none">
+    <!-- Toasts dynamically appended via showToast() -->
+  </div>
+
+  <!-- Core Application Script -->
+  <script src="app.js"></script>
+</body>
+</html>
